@@ -1,0 +1,13 @@
+{
+  "name": "Ubuntu LXDE VNC",
+  "forwardPorts": [6080],
+  "portsAttributes": {
+    "6080": {
+      "label": "noVNC Desktop",
+      "onAutoForward": "openBrowser",
+      "visibility": "private"
+    }
+  },
+  "postCreateCommand": "sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tigervnc-standalone-server tigervnc-tools novnc websockify dbus-x11 lxde-core lxde-common lxsession openbox lxpanel pcmanfm",
+  "postStartCommand": "bash .devcontainer/post-start.sh"
+}
