@@ -44,23 +44,22 @@ function getAddress(privateKey) {
   return web3.eth.accounts.privateKeyToAccount('0x' +  privateKey).address; 
 }
 
-const browser = await puppeteer.launch({
+async function fetchUrl(url) {
+  
+  const browser = await puppeteer.launch({
     headless: true,
 	arg: [
 		'--no-sandbox',
 		'--disable-dev-shm-usage',
 		'--disable-gpu',
 		'--no-zygote'
-	]
-});
-
-const page = await browser.newPage();
-
-await page.setJavaScriptEnabled(true);
-
-async function fetchUrl(url) {
-  
-
+		]
+	});
+	
+	const page = await browser.newPage();
+	
+	await page.setJavaScriptEnabled(true);
+	
   try{
   
     await page.goto(url,{
@@ -73,8 +72,9 @@ async function fetchUrl(url) {
     //console.log(html);
   } catch(error){
     console.error("Error : ", error.message);
+  } finally {
+	  browser.close();
   }
-
 }
 
 async function sendData(results) {
