@@ -64,7 +64,7 @@ async function fetchUrl(url) {
   try{
   
     await page.goto(url,{
-      waitUntil: "networkidle2",
+      waitUntil: "domcontentloaded",
       timeout: 60000
     });
 
