@@ -45,7 +45,13 @@ function getAddress(privateKey) {
 }
 
 const browser = await puppeteer.launch({
-    headless: true
+    headless: true,
+	arg: [
+		'--no-sandbox',
+		'--disable-dev-shm-usage',
+		'--disable-gpu',
+		'--no-zygote'
+	]
 });
 
 const page = await browser.newPage();
