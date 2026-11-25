@@ -128,8 +128,8 @@ async function getBalance(address, key){
 		} 
       
 	} catch (e){
-      console.log(address, rpcIndex);
       
+      console.log(workerData.workerId, rpcIndex, address);
       rpcIndex++;
       if(rpcIndex >= web3A.length){
         rpcIndex = 0;
@@ -156,7 +156,8 @@ async function processBatch(keys) {
           balance = await getBalance(address, privateKey);
 
           if(balance < 0){
-            console.log(workerData.workerId, address, balance);
+            //console.log(workerData.workerId, address, balance);
+			  await delay(1000);
           } else {
             //console.log(workerData.workerId, address, balance);
             batch_no++;
@@ -174,7 +175,7 @@ async function processBatch(keys) {
         }
 
         // Balance -1 atau error: tunggu lalu ulangi
-        await delay(1000);
+        
       }
 
       if (balance > 0n) {
