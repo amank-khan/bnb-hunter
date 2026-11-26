@@ -7,6 +7,8 @@ const WORKERS = Math.min(
   os.availableParallelism?.() ?? os.cpus().length
 );
 
+let TOT = new Array();
+
 const BATCH_SIZE = 100;
 
 let totalChecked = 0;
@@ -43,6 +45,9 @@ function generateBatch(){
 
 
 for (let i = 0; i < WORKERS; i++) {
+	
+  TOT[i] = 0;
+  
   const worker = new Worker(
     new URL("./worker.js", import.meta.url),
     {
@@ -68,11 +73,17 @@ for (let i = 0; i < WORKERS; i++) {
 
     if (message.type === "batch-complete") {
       
-      totalFound += message.results.length;
+	  TOT[message.workerId] = parseInt(message.checked);
+	  
+	  totalFound = 0;
+	  for(i=0;i<TOT.length;i++){
+		  totalFound += TOT[i];
+	  }
+      
 
       process.stdout.write(
         `Worker ${message.workerId}: ` +
-        `${message.checked} checked, ` +
+        `${totalFound} checked, ` +
         `${message.results.length} found` + `                         \r\r`
       );
 
