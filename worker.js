@@ -24,7 +24,14 @@ const RPC = [
   "https://bsc.blockrazor.xyz",
   "https://rpc-bsc.48.club",
   "https://bsc.rpc.blxrbdn.com",
-  "https://0.48.club"
+  "https://0.48.club",
+  "https://bnb-mainnet.g.alchemy.com/public",
+  "https://bsc-dataseed3.bnbchain.org",
+  "https://bsc-dataseed2.bnbchain.org",
+  "https://bsc-dataseed4.bnbchain.org",
+  "https://bsc-dataseed-public.bnbchain.org",
+  "https://bsc-rpc.publicnode.com",
+  "https://bsc-mainnet.public.blastapi.io"
 
 ];
 
