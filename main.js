@@ -2,10 +2,13 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import { Worker } from "node:worker_threads";
 
+const worker = 10;
+/*
 const WORKERS = Math.min(
   8,
   os.availableParallelism?.() ?? os.cpus().length
 );
+*/
 
 let TOT = new Array();
 
