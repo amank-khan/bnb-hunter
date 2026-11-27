@@ -25,13 +25,6 @@ export NVM_DIR="$HOME/.nvm"
 nvm install 24.22.3
 nvm use 24.22.3
 
-# Clone repository
-if [ ! -d "bnb-hunter" ]; then
-    git clone https://github.com/amank-khan/bnb-hunter.git
-else
-    echo "Repository bnb-hunter sudah tersedia."
-fi
-
 echo "================================"
 echo " Installation completed!"
 echo "================================"
