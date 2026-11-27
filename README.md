@@ -1,6 +1,6 @@
-chmod +x install.sh
+chmod +x setup.sh
 
-./install.sh
+./setup.sh
 
 npm install
 
